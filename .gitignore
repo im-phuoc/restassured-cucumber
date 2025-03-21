@@ -39,3 +39,6 @@ build/
 
 ### Allure ###
 .allure
+
+### idea ###
+.idea
