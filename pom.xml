@@ -74,6 +74,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Java Faker -->
+        <dependency>
+            <groupId>com.github.javafaker</groupId>
+            <artifactId>javafaker</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+
         <!-- SLF4J + Logback -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -111,6 +118,13 @@
                     <includes>
                         <include>**/TestRunner.java</include>
                     </includes>
+                    <parallel>classes</parallel>
+                    <threadCount>4</threadCount>
+                    <forkCount>4</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <systemPropertyVariables>
+                        <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
 
