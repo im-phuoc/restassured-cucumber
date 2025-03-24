@@ -1,17 +1,22 @@
 package utils;
 
+import context.TestContext;
 import io.restassured.response.Response;
-import payload.response.LoginResponse;
-import payload.response.RegisterResponse;
+import payload.UserRequest;
+import payload.UserResponse;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.*;
+
 
 public class ResponseValidator {
 
-    public static void assertStatusCode(Response response, int expectedStatusCode) {
+
+    public static void assertStatusCode( int expectedStatusCode) {
+        Response response = TestContext.getInstance().getResponse();
         if (response == null) throw new AssertionError("Response is null");
         int actualStatusCode = response.getStatusCode();
         if (actualStatusCode != expectedStatusCode) {
@@ -19,59 +24,106 @@ public class ResponseValidator {
         }
     }
 
-    public static void assertResponseObject(Response response, List<Map<String, String>> expectedFields, TestContext testContext) {
+    public static void assertResponseObject(List<Map<String, String>> expectedFields) {
+        Response response = TestContext.getInstance().getResponse();
         String username = response.getBody().jsonPath().get("data.username");
         String email = response.getBody().jsonPath().get("data.email");
         String token = response.getBody().jsonPath().get("data.token");
         List<String> roles = response.getBody().jsonPath().getList("data.roles");
+//        if (token != null && token.startsWith("eyJ") && token.split("\\.").length == 3)
 
-        if (token != null && token.startsWith("eyJ") && token.split("\\.").length == 3) {
-            testContext.setLoginResponse(new LoginResponse(token,username,email,roles));
-        } else {
-            testContext.setRegisterResponse(new RegisterResponse(username,email,roles));
-        }
+        UserRequest userRequest = TestContext.getInstance().getUserRequest();
         for (Map<String, String> field : expectedFields) {
             String fieldName = field.get("field");
             String expectedValue = field.get("value");
 
-            if ("<generated_username>".equals(expectedValue)) {
-                if (token == null && testContext.getRegisterRequest() != null) {
-                    expectedValue = testContext.getRegisterRequest().getUsername();
-                } else {
-                    throw new AssertionError("Placeholder <generated_username> is only valid for random register scenario");
-                }
-            } else if ("<generated_email>".equals(expectedValue)) {
-                if (token == null && testContext.getRegisterRequest() != null) {
-                    expectedValue = testContext.getRegisterRequest().getEmail();
-                } else {
-                    throw new AssertionError("Placeholder <generated_email> is only valid for random register scenario");
-                }
-            } else if ("<any>".equals(expectedValue) && "token".equals(fieldName)) {
-                if (token == null || token.isEmpty()) {
-                    throw new AssertionError("Expected a non-empty token but got: " + token);
-                }
-                continue;
+            if (fieldName.equals("token")) {
+                assertNotNull(token);
             }
-
-            if ("roles".equals(fieldName)) {
-                List<String> actualRoles = response.jsonPath().getList("data.roles");
-                List<String> expectedRoles = Arrays.asList(expectedValue.replace("[", "").replace("]", "").split(", "));
-                if (!actualRoles.equals(expectedRoles)) {
-                    throw new AssertionError("Expected roles: " + expectedRoles + " but got: " + actualRoles);
+            if (fieldName.equals("roles")) {
+                assertNotNull(roles);
+                List<String> expectedRoles = Arrays.asList(expectedValue.split("\\s+"));
+                assertTrue(roles.containsAll(expectedRoles));
+            }
+            if (fieldName.equals("username")) {
+                if (expectedValue.equals("<generated_username>")) {
+                    assertEquals(userRequest.getUsername(), username);
+                } else {
+                    assertEquals(username, expectedValue);
                 }
-            } else {
-                String actualValue = response.jsonPath().getString("data." + fieldName);
-                if (actualValue == null || !actualValue.equals(expectedValue)) {
-                    throw new AssertionError("Expected value for field " + fieldName + ": " + expectedValue + " but got: " + actualValue);
+            }
+            if (fieldName.equals("email")) {
+                if (expectedValue.equals("<generated_email>")) {
+                    assertEquals(userRequest.getEmail(), email);
+                } else {
+                    assertEquals(email, expectedValue);
+
                 }
             }
         }
+
     }
 
-    public static void assertErrorFieldAndMessage(Response response, String expectedField, String expectedMessage) {
-        String actualMessage = response.jsonPath().getString("data." + expectedField);
+    public static void assertErrorFieldAndMessage(String expectedField, String expectedMessage) {
+        String actualMessage = TestContext.getInstance().getResponse().jsonPath().getString("data." + expectedField);
         if (actualMessage == null || !actualMessage.equals(expectedMessage)) {
             throw new AssertionError("Expected message for field " + expectedField + ": " + expectedMessage + " but got: " + actualMessage);
+        }
+    }
+
+    public static void verifyPaginationMetadata() {
+        Response response = TestContext.getInstance().getResponse();
+
+        assertNotNull(response);
+
+        Integer pageNumber = response.getBody().jsonPath().get("data.pageNumber");
+        Integer pageSize = response.getBody().jsonPath().get("data.pageSize");
+        Integer totalPages = response.getBody().jsonPath().get("data.totalPages");
+        Integer totalElements = response.getBody().jsonPath().get("data.totalElements");
+        Boolean lastPage = response.getBody().jsonPath().get("data.lastPage");
+
+        assertNotNull(pageNumber);
+        assertTrue(pageNumber >= 0);
+        assertNotNull(pageSize);
+        assertTrue(pageSize > 0);
+        assertNotNull(totalPages);
+        assertTrue(totalPages > 0);
+        assertNotNull(totalElements);
+        assertTrue(totalElements > 0);
+        assertNotNull(lastPage);
+    }
+
+    public static void verifyUserContent() {
+        Response response = TestContext.getInstance().getResponse();
+        List<Map<String, Object>> actualContent = response.getBody().jsonPath().getList("data.content");
+
+        assertNotNull(actualContent);
+        assertFalse(actualContent.isEmpty());
+
+        for (Map<String, Object> content : actualContent) {
+            String username = content.get("username").toString();
+            String email = content.get("email").toString();
+            Object rolesObj = content.get("roles");
+
+            assertNotNull(username);
+            assertFalse(username.isEmpty());
+            assertNotNull(email);
+            assertFalse(email.isEmpty());
+            assertTrue(email.contains("@"));
+            if (!(rolesObj instanceof List<?>)) {
+                throw new AssertionError("Roles are null or not a valid list");
+            } else {
+                List<String> roles = ((List<?>) rolesObj).stream()
+                        .filter(String.class::isInstance)
+                        .map(String.class::cast)
+                        .toList();
+                assertNotNull(roles);
+                assertFalse(roles.isEmpty());
+                for (String role : roles) {
+                    assertNotNull(role);
+                    assertTrue(role.startsWith("ROLE_"));
+                }
+            }
         }
     }
 

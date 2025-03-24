@@ -34,9 +34,9 @@ public class RequestBuilder {
         return this;
     }
 
-    public RequestBuilder withPathParams(String key, String value) {
-        if (key != null && !key.isEmpty() && value != null && !value.isEmpty()) {
-            request.pathParam(key, value);
+    public RequestBuilder withParams(String key1, String key2) {
+        if (key1 != null && !key1.isEmpty() && key2 != null && !key2.isEmpty()) {
+            request.param(key1,key2);
         }
         return this;
     }

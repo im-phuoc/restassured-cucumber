@@ -3,14 +3,14 @@ Feature: Authentication API Testing
   Scenario: Successful login with valid credentials
     Given I send a login request to "/api/auth/login" with the following credentials:
       | username    | password |
-      | user       | 123456   |
+      | admin       | 123456   |
     Then The status code is 200
     And The response contains an object with the following fields:
         | field    | value |
         | token    | <any> |
-        | username | user |
-        | email    | user@gmail.com |
-        | roles    | [ROLE_USER] |
+        | username | admin |
+        | email    | admin@gmail.com |
+        | roles    | ROLE_USER ROLE_MODERATOR ROLE_ADMIN |
 
   Scenario Outline: Login with various invalid credentials
     Given I send a login request to "/api/auth/login" with the following credentials:
@@ -34,7 +34,7 @@ Feature: Authentication API Testing
       | field    | value                |
       | username | <generated_username> |
       | email    | <generated_email>    |
-      | roles    | [ROLE_USER]          |
+      | roles    | ROLE_USER          |
 
   Scenario Outline: Register with various invalid credentials
     Given I send a register request to "/api/auth/register" with the following credentials:

@@ -1,10 +1,11 @@
 package stepDefinitions;
 
-import payload.request.LoginRequest;
-import payload.request.RegisterRequest;
+import io.restassured.response.Response;
+import payload.UserRequest;
+import payload.UserResponse;
 import services.AuthService;
 import utils.FakerUtil;
-import utils.TestContext;
+import context.TestContext;
 import io.cucumber.java.en.Given;
 
 
@@ -19,15 +20,15 @@ public class AuthSteps {
         Map<String, String> credentials = credentialsTable.get(0);
         String username = credentials.get("username");
         String password = credentials.get("password");
-        TestContext.getInstance().setLoginRequest(new LoginRequest(username, password));
         TestContext.getInstance().setResponse(authService.login(endpoint, username, password));
     }
 
     @Given("I send a register request to {string} with random credentials")
     public void registerRandom(String endpoint) {
-        RegisterRequest registerRequest = FakerUtil.generateRegisterRequest();
-        TestContext.getInstance().setRegisterRequest(registerRequest);
-        TestContext.getInstance().setResponse(authService.register(endpoint, registerRequest.getUsername(), registerRequest.getEmail(), registerRequest.getPassword()));
+        UserRequest userRequestRegister = FakerUtil.generateRegisterRequest();
+//        UserRequest userResponse = new UserResponse(userRequestRegister.getUsername(), userRequestRegister.getEmail());
+        TestContext.getInstance().setUserRequest(userRequestRegister);
+        TestContext.getInstance().setResponse(authService.register(endpoint, userRequestRegister.getUsername(), userRequestRegister.getEmail(), userRequestRegister.getPassword()));
     }
 
     @Given("I send a register request to {string} with the following credentials:")
@@ -36,8 +37,6 @@ public class AuthSteps {
         String username = credentials.get("username");
         String email = credentials.get("email");
         String password = credentials.get("password");
-        RegisterRequest registerRequest = new RegisterRequest(username, email, password);
-        TestContext.getInstance().setRegisterRequest(registerRequest);
         TestContext.getInstance().setResponse(authService.register(endpoint,username, email, password));
     }
 }

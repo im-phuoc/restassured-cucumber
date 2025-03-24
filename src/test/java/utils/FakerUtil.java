@@ -1,7 +1,7 @@
 package utils;
 
 import com.github.javafaker.Faker;
-import payload.request.RegisterRequest;
+import payload.UserRequest;
 
 public class FakerUtil {
     private static final Faker faker = new Faker();
@@ -22,7 +22,7 @@ public class FakerUtil {
         return faker.internet().password(6, 20);
     }
 
-    public static RegisterRequest generateRegisterRequest() {
-        return new RegisterRequest(generateUsername(), generateEmail(), generatePassword());
+    public static UserRequest generateRegisterRequest() {
+        return new UserRequest(generateUsername(),generatePassword(), generateEmail());
     }
 }
