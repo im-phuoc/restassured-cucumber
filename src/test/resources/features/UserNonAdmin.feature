@@ -27,7 +27,7 @@ Feature: User API Testing with user have non admin role
     When I send a PUT request to "/api/users/{username}" with path variable "username" as "user" and the following roles:
       | roles |
       | ROLE_USER|
-      | ROLE_MODERATOR |
+      | ROLE_ADMIN |
     Then The status code is 400
     And The response contains an error with field "message" and message "Access Denied"
 

@@ -10,7 +10,7 @@ Feature: Authentication API Testing
         | token    | <any> |
         | username | admin |
         | email    | admin@gmail.com |
-        | roles    | ROLE_USER ROLE_MODERATOR ROLE_ADMIN |
+        | roles    | ROLE_USER ROLE_ADMIN |
 
   Scenario Outline: Login with various invalid credentials
     Given I send a login request to "/api/auth/login" with the following credentials:
@@ -34,7 +34,18 @@ Feature: Authentication API Testing
       | field    | value                |
       | username | <generated_username> |
       | email    | <generated_email>    |
-      | roles    | ROLE_USER          |
+      | roles    | ROLE_USER            |
+
+  Scenario: Register successful with valid credentials
+    Given I send a register request to "/api/auth/register" with the following credentials:
+      | username    | email             | password |
+      | delete      | delete@gmail.com  | 123456   |
+    Then The status code is 200
+    And The response contains an object with the following fields:
+      | field    | value            |
+      | username | delete           |
+      | email    | delete@gmail.com |
+      | roles    | ROLE_USER        |
 
   Scenario Outline: Register with various invalid credentials
     Given I send a register request to "/api/auth/register" with the following credentials:
@@ -43,7 +54,7 @@ Feature: Authentication API Testing
     Then The status code is <statusCode>
     And The response contains an error with field "<field>" and message "<message>"
     Examples:
-        | username  | email             | password | field    | message                              | statusCode |
+        | username  | email             | password  | field    | message                              | statusCode |
         | user      | user@gmail.com    | 123456    | message | Username is already in use           | 400        |
         |           | user@gmail.com    | 123456    | username | must not be blank                   | 400        |
         | user      |                   | 123456    | email    | must not be blank                   | 400        |

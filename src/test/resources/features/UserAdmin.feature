@@ -32,19 +32,19 @@ Feature: User API Testing with user have admin role
       | field    | value |
       | username | admin |
       | email    | admin@gmail.com |
-      | roles    | ROLE_USER ROLE_MODERATOR ROLE_ADMIN |
+      | roles    | ROLE_USER ROLE_ADMIN |
 
   Scenario: Update roles of user
     When I send a PUT request to "/api/users/{username}" with path variable "username" as "update" and the following roles:
       | roles |
       | ROLE_USER|
-      | ROLE_MODERATOR |
+      | ROLE_ADMIN |
     Then The status code is 200
     And The response contains an object with the following fields:
       | field    | value |
       | username | update |
       | email    | update@gmail.com |
-      | roles    | ROLE_USER ROLE_MODERATOR |
+      | roles    | ROLE_USER ROLE_ADMIN |
 
     Scenario Outline: Update user with various invalid roles
     When I send a PUT request to "/api/users/{username}" with path variable "username" as "<username>" and the following roles:
